@@ -1,0 +1,101 @@
+= How to replace standard Equinox shell with Apache Felix GoGo
+
+_source: http://blog.knowhowlab.org/2010/06/how-to-replace-standard-equinox-shell.html_
+
+_post date: 28th June 2010_
+
+Hello,
+
+I've just spent some time to figure out how to integrate Apache Felix GoGo shell into Eclipse Equinox. 
+I found two steps that should be done for this:
+
+1. Disable standard Equinox shell and activate GoGo shell as default. Actually, it was not so complicated.
+One problem, that Equinox shell is a part of system bundle and you cannot just throw it away and replace
+with another implementation as you can do it with Knopflerfish.
+Equinox has runtime options to enable and disable console (-console, -noConsole).
+Then, to enable GoGo we have to install and start 3 GoGo bundles with runtime, shell and commands functionality.
+Fine! Now we can register shell commands based on GoGo API.
+Known issue: I could not replace shell when Equinox is started via Eclipse Launcher.
+
+2. The second and also very important step is how to integrate Equinox shell commands into GoGo shell.
+I wrote some Equinox->GoGo adapter bundle that tracks Equinox shell services and registers GoGo shell service.
+This adapter can redirect calls from GoGo to Equinox. It can also add some usage help to Equinox commands if this help is provided by Equinox shell service. 
+
+When above steps are finished (except support of Eclipse Launcher) we can add new shell commands with GoGo and Equinox shell APIs.
+
+Below you can find some logs from my console and the way how you can run this on your computer.
+
+
+Standard Equinox Console:
+----
+osgi> help
+---Controlling the OSGi framework---
+ launch - start the OSGi Framework
+ shutdown - shutdown the OSGi Framework
+ close - shutdown and exit
+ exit - exit immediately (System.exit)
+ init - uninstall all bundles
+ setprop = - set the OSGi property
+.......
+----
+
+Now Equinox with GoGo console and support of Equinox shell commands
+
+----
+g! help
+equinox:b
+equinox:bundle
+equinox:bundles
+equinox:classSpaces
+equinox:close
+equinox:diag
+equinox:disableBundle
+equinox:disabledBundles
+equinox:enableBundle
+equinox:exec
+equinox:exit
+equinox:fork
+.....
+felix:start
+felix:stop
+felix:uninstall
+felix:update
+felix:which
+gogo:cat
+gogo:each
+gogo:echo
+gogo:format
+gogo:getopt
+gogo:gosh
+......
+
+g! help ss
+ss - [-s []  []] - display installed bundles (short status)
+   scope: equinox
+   parameters:
+      CommandSession
+      String[]
+
+g! ss -s ACTIVE
+Framework is launched.
+id      State       Bundle
+0       ACTIVE      org.eclipse.osgi_3.6.0.v20100517
+1       ACTIVE      org.apache.felix.gogo.runtime_0.6.0
+2       ACTIVE      org.apache.felix.gogo.shell_0.6.0
+3       ACTIVE      org.apache.felix.gogo.command_0.6.0
+4       ACTIVE      org.knowhowlab.osgi.experiments.gogo.equinox_1.0.0
+----
+
+This solution was an experiment to integrate Apache Felix GoGo into Eclipse Equinox with support of all
+Equinox shell commands.
+If you like to make some tests on you computer you have to download Maven project and platform definition.
+To start OSGi framework use command:
+
+----
+mvn -f demo-pom.xml
+----
+
+Hope, that code helps you.
+
+Have a nice day,
+Dmytro
